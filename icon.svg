@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="#1a1820"/>
+  <rect x="18" y="20" width="38" height="50" rx="4" fill="#c9a84c" opacity="0.9"/>
+  <rect x="22" y="25" width="30" height="3" rx="1.5" fill="#0f0e11"/>
+  <rect x="22" y="31" width="24" height="3" rx="1.5" fill="#0f0e11"/>
+  <rect x="22" y="37" width="28" height="3" rx="1.5" fill="#0f0e11"/>
+  <rect x="44" y="38" width="38" height="32" rx="4" fill="#2a2540"/>
+  <rect x="44" y="38" width="38" height="32" rx="4" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <text x="63" y="58" font-size="14" text-anchor="middle" fill="#e8c97a" font-family="Arial">عربي</text>
+</svg>

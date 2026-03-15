@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مترجم الكتب">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>مترجم الكتب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0f0e11;
+  --s1:#1a1820;
+  --s2:#201e2c;
+  --s3:#2a2540;
+  --border:rgba(255,255,255,0.07);
+  --gold:#c9a84c;
+  --gold-l:#e8c97a;
+  --gold-d:rgba(201,168,76,0.12);
+  --gold-d2:rgba(201,168,76,0.22);
+  --text:#f0ece2;
+  --text-m:#9b9690;
+  --text-ar:#e8d8a0;
+  --accent:#6c5fc7;
+  --red:#c45c5c;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);}
+
+body{
+  font-family:'Libre Baskerville',Georgia,serif;
+  display:flex;flex-direction:column;
+}
+
+/* ── TOP BAR ── */
+#bar{
+  display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--safe-top)) 14px 10px;
+  background:var(--s1);
+  border-bottom:0.5px solid var(--border);
+  flex-shrink:0;position:relative;z-index:10;
+}
+
+#logo{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:.3px;white-space:nowrap}
+
+#open-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 14px;
+  background:var(--gold-d2);
+  border:0.5px solid var(--gold);
+  border-radius:9px;
+  color:var(--gold-l);font-size:13px;
+  cursor:pointer;white-space:nowrap;
+  font-family:inherit;
+  -webkit-appearance:none;
+}
+#open-btn:active{background:rgba(201,168,76,0.35)}
+#file-in{display:none}
+
+#nav{display:none;align-items:center;gap:8px;margin-right:auto}
+.nav-btn{
+  width:32px;height:32px;
+  background:var(--s2);border:0.5px solid var(--border);
+  border-radius:7px;color:var(--text);font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.nav-btn:disabled{opacity:.3;cursor:default}
+#pinfo{font-size:12px;color:var(--text-m);white-space:nowrap;min-width:60px;text-align:center}
+
+#font-ctrl{display:none;align-items:center;gap:4px}
+.fz-btn{
+  width:28px;height:28px;background:var(--s2);border:0.5px solid var(--border);
+  border-radius:6px;color:var(--text-m);font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── MAIN ── */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
+
+/* LANDING */
+#land{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;padding:40px 30px;
+}
+.land-icon{
+  width:80px;height:80px;
+  background:var(--gold-d2);border:1px solid var(--gold);
+  border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;
+}
+.land-title{font-size:22px;color:var(--gold-l);text-align:center;line-height:1.5}
+.land-desc{font-size:14px;color:var(--text-m);text-align:center;max-width:300px;line-height:1.8}
+#land-btn{
+  padding:13px 32px;
+  background:var(--gold);border:none;border-radius:12px;
+  color:#0f0e11;font-size:16px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+#land-btn:active{background:var(--gold-l)}
+.land-hint{font-size:11px;color:var(--text-m)}
+
+/* INSTALL HINT */
+#install-hint{
+  background:var(--s3);border:0.5px solid var(--gold);
+  border-radius:10px;padding:12px 16px;
+  font-size:12px;color:var(--text-m);line-height:1.8;
+  max-width:320px;text-align:center;
+  display:none;
+}
+#install-hint strong{color:var(--gold-l)}
+
+/* READER */
+#reader{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:0 0 120px 0;
+  display:none;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+}
+#reader.on{display:block}
+
+.page-sep{
+  text-align:center;font-size:10px;color:var(--text-m);
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:20px 0 14px;
+  font-family:'Libre Baskerville',serif;
+}
+.page-sep span{
+  background:var(--s1);padding:4px 12px;
+  border:0.5px solid var(--border);border-radius:20px;
+}
+
+.para-block{
+  margin:0 12px 6px;
+  border-radius:12px;overflow:hidden;
+  border:0.5px solid transparent;
+  transition:border-color .2s;
+}
+.para-block:active{border-color:var(--border)}
+
+.para-en{
+  padding:14px 18px;
+  font-size:15px;line-height:1.9;
+  color:var(--text);
+  background:var(--s1);
+  font-family:'Libre Baskerville',Georgia,serif;
+  direction:ltr;text-align:left;
+  border-radius:12px 12px 0 0;
+  border-bottom:0.5px dashed var(--border);
+}
+
+.para-ar{
+  padding:14px 18px;
+  font-size:16px;line-height:2.1;
+  color:var(--text-ar);
+  background:var(--s3);
+  font-family:'Amiri','Traditional Arabic',serif;
+  direction:rtl;text-align:right;
+  border-radius:0 0 12px 12px;
+}
+.para-ar.pending{color:var(--text-m);font-size:13px;font-family:inherit;font-style:italic}
+.para-ar.doing{color:var(--gold);font-size:13px;font-family:inherit}
+.para-ar.err{color:var(--red);font-size:12px;font-family:inherit;direction:ltr;text-align:left}
+
+/* BOTTOM BAR */
+#bbar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--s1);
+  border-top:0.5px solid var(--border);
+  padding:10px 14px calc(10px + var(--safe-bot));
+  display:none;flex-direction:column;gap:8px;
+  z-index:10;
+}
+#bbar.on{display:flex}
+
+#bbar-btns{display:flex;gap:8px}
+#tr-page-btn{
+  flex:1;padding:10px;
+  background:var(--s2);border:0.5px solid var(--border);
+  border-radius:9px;color:var(--text);font-size:13px;
+  cursor:pointer;font-family:inherit;
+}
+#tr-all-btn{
+  flex:1;padding:10px;
+  background:var(--gold);border:none;
+  border-radius:9px;color:#0f0e11;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+#tr-all-btn:disabled{background:var(--s2);color:var(--text-m);cursor:default}
+#tr-page-btn:disabled{opacity:.4;cursor:default}
+#stop-btn{
+  padding:10px 14px;
+  background:transparent;border:0.5px solid var(--red);
+  border-radius:9px;color:var(--red);font-size:13px;
+  cursor:pointer;font-family:inherit;display:none;
+}
+#stop-btn.on{display:block}
+
+#prog-row{display:none;align-items:center;gap:10px}
+#prog-row.on{display:flex}
+#prog-wrap{flex:1;height:3px;background:var(--s2);border-radius:2px;overflow:hidden}
+#prog-fill{height:100%;background:var(--gold);width:0%;transition:width .3s}
+#prog-lbl{font-size:11px;color:var(--text-m);white-space:nowrap;min-width:80px;text-align:left}
+
+/* FONT SIZE LEVELS */
+body.fz-s .para-en,.fz-s .para-ar{font-size:13px}
+body.fz-l .para-en{font-size:17px}
+body.fz-l .para-ar{font-size:18px}
+body.fz-xl .para-en{font-size:20px}
+body.fz-xl .para-ar{font-size:21px}
+
+/* SCROLL */
+#reader::-webkit-scrollbar{width:3px}
+#reader::-webkit-scrollbar-track{background:var(--bg)}
+#reader::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <span id="logo">📖 مترجم الكتب</span>
+  <button id="open-btn" onclick="document.getElementById('file-in').click()">+ فتح PDF</button>
+  <input type="file" id="file-in" accept=".pdf">
+
+  <div id="nav">
+    <button class="nav-btn" id="prev-btn" disabled>‹</button>
+    <span id="pinfo">—</span>
+    <button class="nav-btn" id="next-btn" disabled>›</button>
+  </div>
+
+  <div id="font-ctrl">
+    <button class="fz-btn" onclick="changeFont(-1)">A-</button>
+    <button class="fz-btn" onclick="changeFont(1)">A+</button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="land">
+    <div class="land-icon">📚</div>
+    <h1 class="land-title">ترجمة كتب PDF<br>إنجليزي ← عربي</h1>
+    <p class="land-desc">كل فقرة إنجليزية تحتها ترجمتها العربية مباشرة. يعمل بدون انترنت بعد التحميل الأول.</p>
+    <button id="land-btn" onclick="document.getElementById('file-in').click()">افتح ملف PDF</button>
+    <p class="land-hint">يدعم الملفات حتى 600 صفحة</p>
+    <div id="install-hint">
+      <strong>تثبيت التطبيق على الـ iPad:</strong><br>
+      اضغط زر المشاركة ↑ في Safari<br>
+      ثم اختر <strong>"Add to Home Screen"</strong><br>
+      وسيعمل بعدها بدون انترنت تماماً ✓
+    </div>
+  </div>
+
+  <div id="reader"></div>
+</div>
+
+<div id="bbar">
+  <div id="bbar-btns">
+    <button id="tr-page-btn" onclick="translatePage()">ترجم هذه الصفحة</button>
+    <button id="tr-all-btn" onclick="translateAll()">ترجم الكل</button>
+    <button id="stop-btn" onclick="doStop()">إيقاف</button>
+  </div>
+  <div id="prog-row">
+    <div id="prog-wrap"><div id="prog-fill"></div></div>
+    <span id="prog-lbl">جاري الترجمة...</span>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let pdf=null, totalPages=0, curPage=1;
+let pages={}; // pageNum -> [paragraphs]
+let trans={}; // "p_i" -> translated string
+let busy=false, stop=false;
+let fzLevel=0; // -1,0,1,2
+
+// ── FONT SIZE ──
+function changeFont(d){
+  fzLevel=Math.max(-1,Math.min(2,fzLevel+d));
+  document.body.classList.remove('fz-s','fz-l','fz-xl');
+  if(fzLevel===-1) document.body.classList.add('fz-s');
+  if(fzLevel===1)  document.body.classList.add('fz-l');
+  if(fzLevel===2)  document.body.classList.add('fz-xl');
+}
+
+// ── INSTALL HINT (show only in Safari browser, not standalone) ──
+if(!window.navigator.standalone){
+  document.getElementById('install-hint').style.display='block';
+}
+
+// ── FILE LOAD ──
+document.getElementById('file-in').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const ab=await file.arrayBuffer();
+  pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  totalPages=pdf.numPages;
+  pages={}; trans={}; curPage=1;
+  document.getElementById('land').style.display='none';
+  document.getElementById('reader').classList.add('on');
+  document.getElementById('bbar').classList.add('on');
+  document.getElementById('nav').style.display='flex';
+  document.getElementById('font-ctrl').style.display='flex';
+  await showPage(curPage);
+});
+
+// ── PAGE EXTRACT ──
+async function extractPage(n){
+  if(pages[n]) return pages[n];
+  const page=await pdf.getPage(n);
+  const tc=await page.getTextContent();
+  pages[n]=parseParagraphs(tc);
+  return pages[n];
+}
+
+function parseParagraphs(tc){
+  if(!tc.items.length) return [];
+  // group items into visual lines by Y position
+  let lineMap={};
+  tc.items.forEach(it=>{
+    if(!it.str.trim()) return;
+    const y=Math.round(it.transform[5]/3)*3; // snap to 3px grid
+    if(!lineMap[y]) lineMap[y]={y,text:''};
+    lineMap[y].text+=(lineMap[y].text?' ':'')+it.str;
+  });
+  const lines=Object.values(lineMap).sort((a,b)=>b.y-a.y);
+
+  // merge lines into paragraphs by gap
+  const paras=[];
+  let cur='', prevY=null;
+  lines.forEach(l=>{
+    const gap=prevY!==null?Math.abs(l.y-prevY):0;
+    if(prevY!==null && gap>18 && cur.trim()){
+      paras.push(cur.trim());
+      cur=l.text;
+    } else {
+      cur+=(cur?' ':'')+l.text;
+    }
+    prevY=l.y;
+  });
+  if(cur.trim()) paras.push(cur.trim());
+  return paras.filter(p=>p.length>25 && /[a-zA-Z]/.test(p));
+}
+
+// ── RENDER ──
+async function showPage(n){
+  const paras=await extractPage(n);
+  updateNav();
+  renderReader(n,paras);
+}
+
+function renderReader(n,paras){
+  const r=document.getElementById('reader');
+  r.innerHTML='';
+
+  // page separator
+  const sep=document.createElement('div');
+  sep.className='page-sep';
+  sep.innerHTML=`<span>صفحة ${n} من ${totalPages}</span>`;
+  r.appendChild(sep);
+
+  if(!paras.length){
+    const empty=document.createElement('div');
+    empty.style.cssText='padding:40px;text-align:center;color:var(--text-m);font-size:14px;';
+    empty.textContent='لا يوجد نص في هذه الصفحة';
+    r.appendChild(empty);
+    return;
+  }
+
+  paras.forEach((p,i)=>{
+    const key=`${n}_${i}`;
+    const block=document.createElement('div');
+    block.className='para-block';
+    block.id=`blk_${key}`;
+
+    // English
+    const en=document.createElement('div');
+    en.className='para-en';
+    en.textContent=p;
+
+    // Arabic
+    const ar=document.createElement('div');
+    ar.className='para-ar';
+    ar.id=`ar_${key}`;
+    if(trans[key]){
+      ar.textContent=trans[key];
+    } else {
+      ar.classList.add('pending');
+      ar.textContent='اضغط "ترجم" لعرض الترجمة...';
+    }
+
+    block.appendChild(en);
+    block.appendChild(ar);
+    r.appendChild(block);
+  });
+  r.scrollTop=0;
+}
+
+function updateNav(){
+  document.getElementById('pinfo').textContent=`${curPage} / ${totalPages}`;
+  document.getElementById('prev-btn').disabled=curPage<=1;
+  document.getElementById('next-btn').disabled=curPage>=totalPages;
+}
+
+document.getElementById('prev-btn').onclick=async()=>{
+  if(curPage>1){curPage--;await showPage(curPage);}
+};
+document.getElementById('next-btn').onclick=async()=>{
+  if(curPage<totalPages){curPage++;await showPage(curPage);}
+};
+
+// ── TRANSLATION via MyMemory ──
+async function translateText(text){
+  // split if too long (MyMemory limit ~500 chars)
+  if(text.length>480){
+    const mid=text.lastIndexOf(' ',480);
+    const a=await translateText(text.substring(0,mid));
+    const b=await translateText(text.substring(mid+1));
+    return a+' '+b;
+  }
+  try{
+    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`;
+    const r=await fetch(url);
+    const d=await r.json();
+    if(d.responseStatus===200){
+      return d.responseData.translatedText;
+    }
+    return '[خطأ في الترجمة]';
+  }catch(e){
+    return '[تعذّر الاتصال]';
+  }
+}
+
+// ── TRANSLATE PAGE ──
+async function translatePage(){
+  if(!pdf||busy) return;
+  stop=false; setBusy(true);
+  const paras=pages[curPage]||[];
+  for(let i=0;i<paras.length;i++){
+    if(stop) break;
+    const key=`${curPage}_${i}`;
+    if(trans[key]){ setArEl(key,trans[key]); continue; }
+    setArElDoing(key);
+    setProgress(i,paras.length,`فقرة ${i+1} من ${paras.length}`);
+    const result=await translateText(paras[i]);
+    trans[key]=result;
+    setArEl(key,result);
+  }
+  setProgress(paras.length,paras.length,'اكتملت ✓');
+  setBusy(false);
+}
+
+// ── TRANSLATE ALL (page by page) ──
+async function translateAll(){
+  if(!pdf||busy) return;
+  stop=false; setBusy(true);
+  for(let pg=curPage;pg<=totalPages;pg++){
+    if(stop) break;
+    const paras=await extractPage(pg);
+    for(let i=0;i<paras.length;i++){
+      if(stop) break;
+      const key=`${pg}_${i}`;
+      if(trans[key]) continue;
+      const lbl=`ص${pg}/${totalPages} — فقرة ${i+1}`;
+      setProgress(0,1,lbl);
+      if(pg===curPage) setArElDoing(key);
+      const result=await translateText(paras[i]);
+      trans[key]=result;
+      if(pg===curPage) setArEl(key,result);
+    }
+  }
+  setProgress(1,1,'اكتملت الترجمة ✓');
+  setBusy(false);
+}
+
+function doStop(){stop=true;setBusy(false);}
+
+function setBusy(v){
+  busy=v;
+  document.getElementById('tr-page-btn').disabled=v;
+  document.getElementById('tr-all-btn').disabled=v;
+  document.getElementById('stop-btn').classList.toggle('on',v);
+  document.getElementById('prog-row').classList.toggle('on',v);
+  if(!v) document.getElementById('prog-row').classList.remove('on');
+}
+
+function setProgress(done,total,lbl){
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-lbl').textContent=lbl||pct+'%';
+}
+
+function setArEl(key,text){
+  const el=document.getElementById(`ar_${key}`);
+  if(!el) return;
+  el.className='para-ar';
+  if(text.startsWith('[')) el.classList.add('err');
+  el.textContent=text;
+}
+
+function setArElDoing(key){
+  const el=document.getElementById(`ar_${key}`);
+  if(!el) return;
+  el.className='para-ar doing';
+  el.textContent='⏳ جاري الترجمة...';
+}
+
+// ── SERVICE WORKER ──
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

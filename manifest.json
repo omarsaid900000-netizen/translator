@@ -1,0 +1,18 @@
+{
+  "name": "مترجم الكتب",
+  "short_name": "مترجم",
+  "description": "ترجمة كتب PDF من الإنجليزية للعربية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0e11",
+  "theme_color": "#c9a84c",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
