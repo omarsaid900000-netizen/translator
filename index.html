@@ -487,26 +487,89 @@ document.getElementById('next-btn').onclick=async()=>{
   if(curPage<totalPages){curPage++;await showPage(curPage);}
 };
 
-// ── TRANSLATION via MyMemory ──
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ── SPLIT TEXT into chunks ≤ maxLen at sentence boundaries ──
+function splitText(text, maxLen){
+  if(text.length <= maxLen) return [text];
+  const chunks = [];
+  let rem = text.trim();
+  while(rem.length > maxLen){
+    let idx = rem.lastIndexOf('. ', maxLen);
+    if(idx < maxLen * 0.4) idx = rem.lastIndexOf(' ', maxLen);
+    if(idx < 5) idx = maxLen;
+    else idx += 1;
+    chunks.push(rem.substring(0, idx).trim());
+    rem = rem.substring(idx).trim();
+  }
+  if(rem) chunks.push(rem);
+  return chunks.filter(c => c.length > 0);
+}
+
+// ── API 1: MyMemory ──
+async function tryMyMemory(text){
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`;
+  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const d = await r.json();
+  const status = parseInt(d.responseStatus);
+  if(status === 200){
+    const t = d.responseData?.translatedText;
+    if(t && t.trim() && t !== text && !/MYMEMORY WARNING/.test(t)) return t;
+  }
+  return null;
+}
+
+// ── API 2: Google Translate (unofficial, no key needed) ──
+async function tryGoogle(text){
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=${encodeURIComponent(text)}`;
+  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const d = await r.json();
+  if(!d || !d[0]) return null;
+  const result = d[0].filter(x=>x&&x[0]).map(x=>x[0]).join('');
+  return result.trim() || null;
+}
+
+// ── TRANSLATE ONE CHUNK with fallback ──
+async function translateChunk(text){
+  // Try Google first (more reliable, no quota)
+  try {
+    const g = await tryGoogle(text);
+    if(g) return g;
+  } catch(e){}
+
+  // Fallback: MyMemory
+  await sleep(200);
+  try {
+    const m = await tryMyMemory(text);
+    if(m) return m;
+  } catch(e){}
+
+  // Last resort: retry Google after delay
+  await sleep(1500);
+  try {
+    const g2 = await tryGoogle(text);
+    if(g2) return g2;
+  } catch(e){}
+
+  return ''; // return empty string instead of error message
+}
+
+// ── MAIN TRANSLATE FUNCTION ──
 async function translateText(text){
-  // split if too long (MyMemory limit ~500 chars)
-  if(text.length>480){
-    const mid=text.lastIndexOf(' ',480);
-    const a=await translateText(text.substring(0,mid));
-    const b=await translateText(text.substring(mid+1));
-    return a+' '+b;
+  text = text.trim();
+  if(!text) return '';
+
+  const chunks = splitText(text, 400);
+  const results = [];
+  for(const chunk of chunks){
+    if(stop) break;
+    const result = await translateChunk(chunk);
+    results.push(result);
+    if(chunks.length > 1) await sleep(300);
   }
-  try{
-    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`;
-    const r=await fetch(url);
-    const d=await r.json();
-    if(d.responseStatus===200){
-      return d.responseData.translatedText;
-    }
-    return '[خطأ في الترجمة]';
-  }catch(e){
-    return '[تعذّر الاتصال]';
-  }
+  return results.join(' ').trim();
 }
 
 // ── TRANSLATE PAGE ──
@@ -574,8 +637,12 @@ function setArEl(key,text){
   const el=document.getElementById(`ar_${key}`);
   if(!el) return;
   el.className='para-ar';
-  if(text.startsWith('[')) el.classList.add('err');
-  el.textContent=text;
+  if(!text || text.trim()===''){
+    el.classList.add('pending');
+    el.textContent='لم تتم الترجمة، حاول مرة أخرى';
+  } else {
+    el.textContent=text;
+  }
 }
 
 function setArElDoing(key){
