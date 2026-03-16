@@ -76,20 +76,33 @@ body{font-family:'Libre Baskerville',Georgia,serif;display:flex;flex-direction:c
 .page-sep{text-align:center;font-size:10px;color:var(--text-m);letter-spacing:1.5px;padding:16px 0 12px;}
 .page-sep span{background:var(--s1);padding:4px 14px;border:0.5px solid var(--border);border-radius:20px;}
 
-.para-block{margin:0 10px 5px;border-radius:12px;overflow:hidden;border:0.5px solid transparent;}
-.para-block:hover{border-color:var(--border)}
-.heading-block{margin-top:10px}
+.para-block{
+  margin:0 10px 10px;
+  border-radius:12px;overflow:hidden;
+  border:0.5px solid var(--border);
+  box-shadow:0 1px 4px rgba(0,0,0,0.15);
+}
+.heading-block{margin-top:14px;border-color:var(--gold);}
 
 .para-en{
-  padding:12px 16px;font-size:15px;line-height:1.9;
+  padding:13px 16px 12px;font-size:15px;line-height:1.9;
   color:var(--text);background:var(--s1);
   font-family:'Libre Baskerville',Georgia,serif;
   direction:ltr;text-align:left;
-  border-radius:12px 12px 0 0;
-  border-bottom:0.5px dashed var(--border);
+  border-bottom:1.5px solid var(--border2);
   user-select:text;-webkit-user-select:text;
 }
 .para-heading{font-size:17px!important;font-weight:700;color:var(--gold-l)!important;}
+
+/* Arabic translation divider label */
+.ar-label{
+  padding:4px 16px;
+  font-size:10px;letter-spacing:1px;
+  color:var(--gold);background:var(--s2);
+  border-bottom:0.5px solid var(--border);
+  direction:rtl;text-align:right;
+  font-family:'Noto Naskh Arabic',sans-serif;
+}
 
 .para-ar{
   padding:13px 18px 16px;font-size:19px;line-height:2.3;
@@ -288,12 +301,14 @@ body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:23px!
 </div>
 
 <script>
-// ── PAGE VIEWER ──
-document.getElementById('pg-view-btn').onclick=()=>openPageViewer(curPage);
-document.getElementById('pgview-prev').onclick=()=>pgview_page>1&&openPageViewer(pgview_page-1);
-document.getElementById('pgview-next').onclick=()=>pgview_page<totalPages&&openPageViewer(pgview_page+1);
-
+// ── PAGE VIEWER ── (runs after DOM ready, references main vars via functions)
 let pgview_page=1;
+
+function initPageViewer(){
+  document.getElementById('pg-view-btn').onclick=()=>{if(typeof pdf!=='undefined'&&pdf) openPageViewer(curPage);};
+  document.getElementById('pgview-prev').onclick=()=>pgview_page>1&&openPageViewer(pgview_page-1);
+  document.getElementById('pgview-next').onclick=()=>pgview_page<totalPages&&openPageViewer(pgview_page+1);
+}
 
 async function openPageViewer(n){
   if(!pdf) return;
@@ -320,29 +335,18 @@ async function openPageViewer(n){
 
   try{
     const page=await pdf.getPage(n);
-    // use high scale for crisp rendering on retina/iPad
     const deviceScale=window.devicePixelRatio||2;
     const targetWidth=body.clientWidth||window.innerWidth;
     const baseVp=page.getViewport({scale:1});
     const scale=Math.max(2,(targetWidth/baseVp.width)*deviceScale);
     const vp=page.getViewport({scale});
-
     canvas.width=vp.width;
     canvas.height=vp.height;
     canvas.style.width='100%';
     canvas.style.height='auto';
-
-    // white background
     ctx.fillStyle='#ffffff';
     ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    await page.render({
-      canvasContext:ctx,
-      viewport:vp,
-      intent:'display',
-      renderInteractiveForms:false
-    }).promise;
-
+    await page.render({canvasContext:ctx,viewport:vp,intent:'display',renderInteractiveForms:false}).promise;
     loadEl.style.display='none';
   }catch(e){
     loadEl.textContent='تعذّر عرض الصفحة';
@@ -598,9 +602,13 @@ function parseParagraphs(tc){
   // convert to para objects
   return blocks
     .map(b=>{
-      let text=b.lines.map(l=>l.text).join(' ');
-      // fix hyphenation
-      text=text.replace(/- /g,'');
+      // join lines, fixing end-of-line hyphenation (word- nextword → wordnextword)
+      let text='';
+      b.lines.forEach((l,i)=>{
+        if(i===0){text=l.text;}
+        else if(text.endsWith('-')){text=text.slice(0,-1)+l.text.trimStart();}
+        else{text+=' '+l.text;}
+      });
       text=text.replace(/\s+/g,' ').trim();
       return {text,isHeading:b.isHeading};
     })
@@ -630,14 +638,27 @@ function renderReader(n,paras){
     const block=document.createElement('div');
     block.className='para-block'+(p.isHeading?' heading-block':'');
     block.id=`blk_${key}`;
+
+    // English text
     const en=document.createElement('div');
     en.className='para-en'+(p.isHeading?' para-heading':'');
     en.textContent=p.text;
+
+    // Divider label
+    const lbl=document.createElement('div');
+    lbl.className='ar-label';
+    lbl.textContent='▼ الترجمة';
+
+    // Arabic translation
     const ar=document.createElement('div');
     ar.className='para-ar';ar.id=`ar_${key}`;
-    if(trans[key]) ar.textContent=trans[key];
+    if(trans[key]) ar.innerHTML=highlightBizTerms(trans[key]);
     else{ar.classList.add('pending');ar.textContent='في انتظار الترجمة...';}
-    block.appendChild(en);block.appendChild(ar);r.appendChild(block);
+
+    block.appendChild(en);
+    block.appendChild(lbl);
+    block.appendChild(ar);
+    r.appendChild(block);
   });
   r.scrollTop=0;
 }
@@ -707,7 +728,7 @@ const BIZ_TERMS = [
   'ROI','KPI','EBITDA','OKR','SWOT','CEO','CFO','COO','CMO','CTO',
   'B2B','B2C','SaaS','MVP','P&L','CRM','ERP','IPO','M&A','VC','PE',
   'CAGR','NPS','CAC','LTV','CLV','ARR','MRR','ROAS','GTM','USP',
-  'SPIN','BANT','MEDDIC','AIDA','USP','CPL','CPC','CTR'
+  'SPIN','BANT','MEDDIC','AIDA','CPL','CPC','CTR'
 ];
 
 function highlightBizTerms(text){
@@ -759,12 +780,40 @@ async function tryMyMemory(text){
   return null;
 }
 
-async function translateChunk(text){
-  try{const g=await tryGoogle(text);if(g) return g;}catch(e){}
-  await sleep(200);
-  try{const m=await tryMyMemory(text);if(m) return m;}catch(e){}
+// check if text is mostly Arabic (has Arabic chars)
+function isArabic(text){
+  const arabicChars=(text.match(/[\u0600-\u06FF]/g)||[]).length;
+  return arabicChars > text.length*0.15;
+}
+
+async function translateChunk(text, attempt=0){
+  // Try Google first
+  try{
+    const g=await tryGoogle(text);
+    if(g && isArabic(g)) return g;
+  }catch(e){}
+
+  await sleep(300);
+
+  // Try MyMemory
+  try{
+    const m=await tryMyMemory(text);
+    if(m && isArabic(m)) return m;
+  }catch(e){}
+
+  // Retry Google after delay
   await sleep(1500);
-  try{const g2=await tryGoogle(text);if(g2) return g2;}catch(e){}
+  try{
+    const g2=await tryGoogle(text);
+    if(g2 && isArabic(g2)) return g2;
+  }catch(e){}
+
+  // Last attempt: MyMemory again
+  if(attempt<1){
+    await sleep(2000);
+    return translateChunk(text, attempt+1);
+  }
+
   return '';
 }
 
@@ -852,6 +901,9 @@ function setArElDoing(key){
 
 // SERVICE WORKER
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// init page viewer buttons (needs main vars to be defined first)
+initPageViewer();
 </script>
 </body>
 </html>
