@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>مترجم الكتب</title>
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -92,19 +92,37 @@ body{font-family:'Libre Baskerville',Georgia,serif;display:flex;flex-direction:c
 .para-heading{font-size:17px!important;font-weight:700;color:var(--gold-l)!important;}
 
 .para-ar{
-  padding:12px 16px;font-size:16px;line-height:2.1;
+  padding:13px 18px 16px;font-size:19px;line-height:2.3;
   color:var(--text-ar);background:var(--s3);
-  font-family:'Amiri','Traditional Arabic',serif;
+  font-family:'Noto Naskh Arabic','Traditional Arabic','Arial Unicode MS',sans-serif;
+  font-weight:400;
   direction:rtl;text-align:right;
   border-radius:0 0 12px 12px;
 }
-.para-ar.pending{color:var(--text-m);font-size:13px;font-family:inherit;font-style:italic}
-.para-ar.doing{color:var(--gold);font-size:13px;font-family:inherit;animation:pulse 1.2s infinite}
+.para-ar.pending{color:var(--text-m);font-size:14px;font-family:'Noto Naskh Arabic',sans-serif;font-style:normal;font-weight:400}
+.para-ar.doing{color:var(--gold);font-size:14px;font-family:'Noto Naskh Arabic',sans-serif;animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 
-body.fz-s .para-en,.fz-s .para-ar{font-size:13px!important}
-body.fz-l .para-en{font-size:17px!important}body.fz-l .para-ar{font-size:18px!important}
-body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:21px!important}
+/* business term highlight */
+.biz-term{
+  background:rgba(201,168,76,0.25);
+  color:var(--gold-l);
+  font-weight:600;
+  border-radius:4px;
+  padding:1px 5px;
+  border-bottom:1.5px solid var(--gold);
+  font-style:normal;
+  cursor:default;
+}
+body.light .biz-term{
+  background:rgba(122,92,16,0.12);
+  color:#5a3e08;
+  border-bottom-color:#7a5c10;
+}
+
+body.fz-s .para-en{font-size:13px!important}body.fz-s .para-ar{font-size:15px!important}
+body.fz-l .para-en{font-size:17px!important}body.fz-l .para-ar{font-size:20px!important}
+body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:23px!important}
 
 /* BOTTOM BAR */
 #bbar{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:0.5px solid var(--border);padding:8px 10px calc(8px + var(--safe-bot));display:none;flex-direction:column;gap:7px;z-index:20;}
@@ -162,7 +180,7 @@ body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:21px!
 #sel-pop.show{display:flex}
 #sel-pop-btn{padding:10px 16px;background:var(--gold-d2);color:var(--gold-l);font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;border-bottom:0.5px solid var(--border);}
 #sel-pop-btn:active{background:var(--gold-d)}
-#sel-pop-res{padding:12px 16px;font-size:15px;line-height:1.9;color:var(--text-ar);font-family:'Amiri',serif;direction:rtl;text-align:right;display:none;min-height:40px;}
+#sel-pop-res{padding:12px 16px;font-size:17px;line-height:2;color:var(--text-ar);font-family:'Noto Naskh Arabic',sans-serif;direction:rtl;text-align:right;display:none;min-height:40px;}
 
 /* scrollbars */
 #reader::-webkit-scrollbar,.pbody::-webkit-scrollbar{width:3px}
@@ -456,40 +474,61 @@ function parseParagraphs(tc){
     h:it.height||Math.abs(it.transform[3])||12
   }));
   if(!items.length) return [];
+
+  // detect body font size
   const hc={};
   items.forEach(it=>{const k=Math.round(it.h);hc[k]=(hc[k]||0)+1;});
   const bodyH=parseInt(Object.entries(hc).sort((a,b)=>b[1]-a[1])[0][0]);
   const snap=Math.max(3,Math.round(bodyH*0.5));
+
+  // group items into visual lines
   const lm={};
   items.forEach(it=>{
     const yk=Math.round(it.y/snap)*snap;
     if(!lm[yk]) lm[yk]={y:it.y,items:[],h:it.h};
     lm[yk].items.push(it);lm[yk].h=Math.max(lm[yk].h,it.h);
   });
-  const lines=Object.values(lm).sort((a,b)=>b.y-a.y).map(l=>({
-    y:l.y,h:l.h,text:l.items.sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ').replace(/\s+/g,' ').trim()
-  })).filter(l=>l.text.length>0);
+  const lines=Object.values(lm)
+    .sort((a,b)=>b.y-a.y)
+    .map(l=>({
+      y:l.y,h:l.h,
+      isHeading:l.h>bodyH*1.25,
+      text:l.items.sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ').replace(/\s+/g,' ').trim()
+    }))
+    .filter(l=>l.text.length>1);
+
   if(!lines.length) return [];
-  const gaps=[];
-  for(let i=1;i<lines.length;i++) gaps.push(Math.abs(lines[i-1].y-lines[i].y));
-  gaps.sort((a,b)=>a-b);
-  const medGap=gaps[Math.floor(gaps.length*0.5)]||bodyH*1.3;
-  const breakThr=medGap*1.6;
-  const paras=[];let cur='',prevY=null,prevH=bodyH;
+
+  // group lines into blocks of 3 (headings get their own block)
+  const blocks=[];
+  let group=[];
   lines.forEach(l=>{
-    const gap=prevY!==null?Math.abs(prevY-l.y):0;
-    const isH=l.h>bodyH*1.25;
-    if(prevY!==null&&(gap>breakThr||isH)&&cur.trim()){
-      paras.push({text:cur.trim(),isHeading:prevH>bodyH*1.25});
-      cur=l.text;
+    if(l.isHeading){
+      if(group.length){
+        blocks.push({lines:group,isHeading:false});
+        group=[];
+      }
+      blocks.push({lines:[l],isHeading:true});
     } else {
-      if(cur.endsWith('-')) cur=cur.slice(0,-1)+l.text.trimStart();
-      else cur+=(cur?' ':'')+l.text;
+      group.push(l);
+      if(group.length>=3){
+        blocks.push({lines:group,isHeading:false});
+        group=[];
+      }
     }
-    prevY=l.y;prevH=l.h;
   });
-  if(cur.trim()) paras.push({text:cur.trim(),isHeading:prevH>bodyH*1.25});
-  return paras.filter(p=>p.text.length>15).map(p=>({...p,text:p.text.replace(/\s+/g,' ').trim()}));
+  if(group.length) blocks.push({lines:group,isHeading:false});
+
+  // convert to para objects
+  return blocks
+    .map(b=>{
+      let text=b.lines.map(l=>l.text).join(' ');
+      // fix hyphenation
+      text=text.replace(/- /g,'');
+      text=text.replace(/\s+/g,' ').trim();
+      return {text,isHeading:b.isHeading};
+    })
+    .filter(p=>p.text.length>5);
 }
 
 // RENDER
@@ -555,11 +594,57 @@ async function translateSel(){
   btn.textContent='⏳ جاري...';btn.disabled=true;
   res.style.display='block';res.textContent='جاري الترجمة...';
   const tr=await translateText(txt);
-  res.textContent=tr||'—';
+  res.innerHTML=highlightBizTerms(tr)||'—';
   btn.textContent='ترجم المحدد';btn.disabled=false;
 }
 
-// TRANSLATION ENGINE
+// BUSINESS TERMS - Arabic + English kept in Arabic text
+const BIZ_TERMS = [
+  // ── Finance ──
+  'الإيرادات','العائد على الاستثمار','هامش الربح','التدفق النقدي','الميزانية العمومية',
+  'رأس المال','الأصول','الخصوم','الربحية','تكاليف التشغيل','الاستثمار','صافي الربح',
+  'المبيعات','الحصة السوقية','معدل النمو','السيولة المالية','نقطة التعادل',
+  'العائد على حقوق الملكية','الدخل التشغيلي','هامش الإسهام',
+  // ── Strategy ──
+  'الاستراتيجية','التخطيط الاستراتيجي','الأهداف الاستراتيجية','مؤشرات الأداء',
+  'الميزة التنافسية','نموذج العمل','القيمة المقترحة','حصة السوق','التوسع',
+  'الاستحواذ','الاندماج','التنويع','الابتكار','التحول الرقمي','النمو المستدام',
+  // ── Sales ──
+  'المبيعات','مسار المبيعات','دورة المبيعات','إغلاق الصفقة','العميل المحتمل',
+  'تأهيل العملاء','الاعتراضات','متابعة العملاء','عرض القيمة','البيع الاستشاري',
+  'الحاجة الكامنة','نقطة الألم','صانع القرار','بناء الثقة','الولاء',
+  'معدل التحويل','اكتساب العملاء','الاحتفاظ بالعملاء','قيمة العميل مدى الحياة',
+  // ── Marketing ──
+  'التسويق','العلامة التجارية','الوعي بالعلامة','الاستهداف','تجزئة السوق',
+  'التحليل التنافسي','الرسالة التسويقية','قناة التوزيع','المزيج التسويقي',
+  'تجربة العميل','رحلة العميل','نقاط التواصل','التسويق المحتوى',
+  // ── Management ──
+  'القيادة','الإدارة','التفويض','التمكين','المساءلة','ثقافة المنظمة',
+  'إدارة التغيير','بناء الفريق','الحوافز','إدارة الأداء','التطوير المهني',
+  'الكفاءات الجوهرية','التخطيط التشغيلي','الكفاءة التشغيلية',
+  // ── Psychology / Influence ──
+  'علم النفس','السلوك','الدوافع','المحفزات','التحيز المعرفي','صنع القرار',
+  'التأثير','الإقناع','المبادئ النفسية','المقابلة','الاتصال الفعال',
+  'الذكاء العاطفي','الوعي الذاتي','التعاطف','اللغة غير اللفظية',
+  'نظرية الدفع','التأطير','نقص المعلومات','الدليل الاجتماعي','مبدأ الندرة',
+  // ── English acronyms kept in Arabic text ──
+  'ROI','KPI','EBITDA','OKR','SWOT','CEO','CFO','COO','CMO','CTO',
+  'B2B','B2C','SaaS','MVP','P&L','CRM','ERP','IPO','M&A','VC','PE',
+  'CAGR','NPS','CAC','LTV','CLV','ARR','MRR','ROAS','GTM','USP',
+  'SPIN','BANT','MEDDIC','AIDA','USP','CPL','CPC','CTR'
+];
+
+function highlightBizTerms(text){
+  if(!text) return '';
+  let result=text;
+  BIZ_TERMS.forEach(term=>{
+    // escape for regex
+    const escaped=term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const re=new RegExp(`(${escaped})`,'g');
+    result=result.replace(re,'<mark class="biz-term">$1</mark>');
+  });
+  return result;
+}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 function splitText(text,maxLen){
@@ -677,8 +762,12 @@ function setProgress(done,total,lbl){
 function setArEl(key,text){
   const el=document.getElementById(`ar_${key}`);if(!el) return;
   el.className='para-ar';
-  if(!text||!text.trim()){el.classList.add('pending');el.textContent='لم تتم الترجمة';}
-  else el.textContent=text;
+  if(!text||!text.trim()){
+    el.classList.add('pending');
+    el.textContent='لم تتم الترجمة';
+  } else {
+    el.innerHTML=highlightBizTerms(text);
+  }
 }
 function setArElDoing(key){
   const el=document.getElementById(`ar_${key}`);if(!el) return;
