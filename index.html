@@ -200,6 +200,7 @@ body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:23px!
     <button class="bb" id="next-btn" disabled style="font-size:19px">›</button>
   </div>
   <div id="bar-tools">
+    <button class="bb" id="pg-view-btn" title="عرض الصفحة">🖼</button>
     <button class="bb" id="srch-btn">🔍</button>
     <button class="bb" id="toc-btn">☰</button>
     <button class="bb" id="theme-btn">🌙</button>
@@ -273,7 +274,67 @@ body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:23px!
   </div>
 </div>
 
-<!-- SELECTION POPUP -->
+<!-- PAGE VIEWER PANEL -->
+<div class="panel" id="pgview-panel">
+  <div class="pbar">
+    <span class="ptitle" id="pgview-title">عرض الصفحة</span>
+    <button class="bb" id="pgview-prev" style="font-size:19px">‹</button>
+    <button class="bb" id="pgview-next" style="font-size:19px">›</button>
+    <button class="pclose" onclick="closePanel('pgview-panel')">✕</button>
+  </div>
+  <div class="pbody" id="pgview-body" style="padding:0;display:flex;align-items:flex-start;justify-content:center;background:var(--bg);overflow-y:auto;">
+    <canvas id="pgview-canvas" style="max-width:100%;height:auto;display:block;"></canvas>
+  </div>
+</div>
+
+<script>
+// ── PAGE VIEWER ──
+document.getElementById('pg-view-btn').onclick=()=>openPageViewer(curPage);
+document.getElementById('pgview-prev').onclick=()=>pgview_page>1&&openPageViewer(pgview_page-1);
+document.getElementById('pgview-next').onclick=()=>pgview_page<totalPages&&openPageViewer(pgview_page+1);
+
+let pgview_page=1;
+
+async function openPageViewer(n){
+  if(!pdf) return;
+  pgview_page=n;
+  openPanel('pgview-panel');
+  document.getElementById('pgview-title').textContent=`صفحة ${n} من ${totalPages}`;
+  document.getElementById('pgview-prev').disabled=n<=1;
+  document.getElementById('pgview-next').disabled=n>=totalPages;
+  const body=document.getElementById('pgview-body');
+  const canvas=document.getElementById('pgview-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // loading indicator
+  const loadEl=document.getElementById('pgview-loading');
+  if(!loadEl){
+    const ld=document.createElement('div');
+    ld.id='pgview-loading';
+    ld.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-m);font-size:14px;';
+    ld.textContent='جاري التحميل...';
+    body.style.position='relative';
+    body.appendChild(ld);
+  } else {
+    loadEl.style.display='block';
+  }
+  try{
+    const page=await pdf.getPage(n);
+    const vp=page.getViewport({scale:window.devicePixelRatio||2});
+    canvas.width=vp.width;
+    canvas.height=vp.height;
+    canvas.style.width='100%';
+    canvas.style.height='auto';
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const ld2=document.getElementById('pgview-loading');
+    if(ld2) ld2.style.display='none';
+  }catch(e){
+    const ld2=document.getElementById('pgview-loading');
+    if(ld2){ld2.textContent='تعذّر عرض الصفحة';}
+  }
+}
+</script>
+
 <div id="sel-pop">
   <button id="sel-pop-btn" onclick="translateSel()">ترجم المحدد</button>
   <div id="sel-pop-res"></div>
