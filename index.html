@@ -9,270 +9,207 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>مترجم الكتب</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-:root{
-  --bg:#0f0e11;
-  --s1:#1a1820;
-  --s2:#201e2c;
-  --s3:#2a2540;
-  --border:rgba(255,255,255,0.07);
-  --gold:#c9a84c;
-  --gold-l:#e8c97a;
-  --gold-d:rgba(201,168,76,0.12);
-  --gold-d2:rgba(201,168,76,0.22);
-  --text:#f0ece2;
-  --text-m:#9b9690;
-  --text-ar:#e8d8a0;
-  --accent:#6c5fc7;
-  --red:#c45c5c;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bot: env(safe-area-inset-bottom, 0px);
+body.dark{
+  --bg:#0f0e11;--s1:#1a1820;--s2:#201e2c;--s3:#2a2540;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --gold:#c9a84c;--gold-l:#e8c97a;--gold-d:rgba(201,168,76,0.13);--gold-d2:rgba(201,168,76,0.22);
+  --text:#f0ece2;--text-m:#9b9690;--text-ar:#e8d8a0;--red:#c45c5c;
 }
+body.light{
+  --bg:#f4f0e6;--s1:#ffffff;--s2:#ede8dc;--s3:#e4ddd0;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.16);
+  --gold:#7a5c10;--gold-l:#5a3e08;--gold-d:rgba(122,92,16,0.1);--gold-d2:rgba(122,92,16,0.18);
+  --text:#18140e;--text-m:#7a7060;--text-ar:#2e200a;--red:#a03030;
+}
+
+:root{--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);}
 
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);}
+body{font-family:'Libre Baskerville',Georgia,serif;display:flex;flex-direction:column;transition:background .25s,color .25s;}
 
-body{
-  font-family:'Libre Baskerville',Georgia,serif;
-  display:flex;flex-direction:column;
-}
-
-/* ── TOP BAR ── */
+/* TOP BAR */
 #bar{
-  display:flex;align-items:center;gap:10px;
-  padding:calc(10px + var(--safe-top)) 14px 10px;
-  background:var(--s1);
-  border-bottom:0.5px solid var(--border);
-  flex-shrink:0;position:relative;z-index:10;
+  display:flex;align-items:center;gap:7px;
+  padding:calc(8px + var(--safe-top)) 10px 8px;
+  background:var(--s1);border-bottom:0.5px solid var(--border);
+  flex-shrink:0;z-index:20;
 }
-
-#logo{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:.3px;white-space:nowrap}
-
-#open-btn{
-  display:flex;align-items:center;gap:6px;
-  padding:8px 14px;
-  background:var(--gold-d2);
-  border:0.5px solid var(--gold);
-  border-radius:9px;
-  color:var(--gold-l);font-size:13px;
-  cursor:pointer;white-space:nowrap;
-  font-family:inherit;
-  -webkit-appearance:none;
+#logo{font-size:13px;color:var(--gold);font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:2px}
+.bb{
+  width:34px;height:34px;background:var(--s2);border:0.5px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .15s;font-family:inherit;
 }
-#open-btn:active{background:rgba(201,168,76,0.35)}
+.bb:active{background:var(--s3)}
+.bb:disabled{opacity:.3;cursor:default}
+#open-btn{padding:0 12px;width:auto;background:var(--gold-d2);border-color:var(--gold);color:var(--gold-l);font-size:13px;gap:4px;}
 #file-in{display:none}
+#nav-wrap{display:none;flex:1;align-items:center;justify-content:center;gap:5px;}
+#pinfo{font-size:12px;color:var(--text-m);background:var(--s2);border:0.5px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap;}
+#pinfo:active{background:var(--s3)}
+#bar-tools{display:none;align-items:center;gap:5px;flex-shrink:0}
 
-#nav{display:none;align-items:center;gap:8px;margin-right:auto}
-.nav-btn{
-  width:32px;height:32px;
-  background:var(--s2);border:0.5px solid var(--border);
-  border-radius:7px;color:var(--text);font-size:16px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-}
-.nav-btn:disabled{opacity:.3;cursor:default}
-#pinfo{font-size:12px;color:var(--text-m);white-space:nowrap;min-width:60px;text-align:center}
-
-#font-ctrl{display:none;align-items:center;gap:4px}
-.fz-btn{
-  width:28px;height:28px;background:var(--s2);border:0.5px solid var(--border);
-  border-radius:6px;color:var(--text-m);font-size:13px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-}
-
-/* ── MAIN ── */
+/* MAIN */
 #main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
 
 /* LANDING */
-#land{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:22px;padding:40px 30px;
-}
-.land-icon{
-  width:80px;height:80px;
-  background:var(--gold-d2);border:1px solid var(--gold);
-  border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;
-}
-.land-title{font-size:22px;color:var(--gold-l);text-align:center;line-height:1.5}
-.land-desc{font-size:14px;color:var(--text-m);text-align:center;max-width:300px;line-height:1.8}
-#land-btn{
-  padding:13px 32px;
-  background:var(--gold);border:none;border-radius:12px;
-  color:#0f0e11;font-size:16px;font-weight:700;
-  cursor:pointer;font-family:inherit;
-}
-#land-btn:active{background:var(--gold-l)}
+#land{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:36px 26px;}
+.land-icon{width:72px;height:72px;background:var(--gold-d2);border:1px solid var(--gold);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.land-title{font-size:21px;color:var(--gold-l);text-align:center;line-height:1.5}
+.land-sub{font-size:13px;color:var(--text-m);text-align:center;max-width:290px;line-height:1.8}
+#land-btn{padding:12px 30px;background:var(--gold);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+#land-btn:active{opacity:.85}
 .land-hint{font-size:11px;color:var(--text-m)}
-
-/* INSTALL HINT */
-#install-hint{
-  background:var(--s3);border:0.5px solid var(--gold);
-  border-radius:10px;padding:12px 16px;
-  font-size:12px;color:var(--text-m);line-height:1.8;
-  max-width:320px;text-align:center;
-  display:none;
-}
+#install-hint{background:var(--s3);border:0.5px solid var(--gold);border-radius:10px;padding:11px 15px;font-size:12px;color:var(--text-m);line-height:1.8;max-width:310px;text-align:center;display:none;}
 #install-hint strong{color:var(--gold-l)}
 
 /* READER */
-#reader{
-  flex:1;overflow-y:auto;overflow-x:hidden;
-  padding:0 0 120px 0;
-  display:none;
-  -webkit-overflow-scrolling:touch;
-  scroll-behavior:smooth;
-}
+#reader{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 100px;display:none;-webkit-overflow-scrolling:touch;}
 #reader.on{display:block}
 
-.page-sep{
-  text-align:center;font-size:10px;color:var(--text-m);
-  letter-spacing:1.5px;text-transform:uppercase;
-  padding:20px 0 14px;
-  font-family:'Libre Baskerville',serif;
-}
-.page-sep span{
-  background:var(--s1);padding:4px 12px;
-  border:0.5px solid var(--border);border-radius:20px;
-}
+.page-sep{text-align:center;font-size:10px;color:var(--text-m);letter-spacing:1.5px;padding:16px 0 12px;}
+.page-sep span{background:var(--s1);padding:4px 14px;border:0.5px solid var(--border);border-radius:20px;}
 
-.para-block{
-  margin:0 12px 6px;
-  border-radius:12px;overflow:hidden;
-  border:0.5px solid transparent;
-  transition:border-color .2s;
-}
-.para-block:active{border-color:var(--border)}
+.para-block{margin:0 10px 5px;border-radius:12px;overflow:hidden;border:0.5px solid transparent;}
+.para-block:hover{border-color:var(--border)}
+.heading-block{margin-top:10px}
 
 .para-en{
-  padding:14px 18px;
-  font-size:15px;line-height:1.9;
-  color:var(--text);
-  background:var(--s1);
+  padding:12px 16px;font-size:15px;line-height:1.9;
+  color:var(--text);background:var(--s1);
   font-family:'Libre Baskerville',Georgia,serif;
   direction:ltr;text-align:left;
   border-radius:12px 12px 0 0;
   border-bottom:0.5px dashed var(--border);
+  user-select:text;-webkit-user-select:text;
 }
+.para-heading{font-size:17px!important;font-weight:700;color:var(--gold-l)!important;}
 
 .para-ar{
-  padding:14px 18px;
-  font-size:16px;line-height:2.1;
-  color:var(--text-ar);
-  background:var(--s3);
+  padding:12px 16px;font-size:16px;line-height:2.1;
+  color:var(--text-ar);background:var(--s3);
   font-family:'Amiri','Traditional Arabic',serif;
   direction:rtl;text-align:right;
   border-radius:0 0 12px 12px;
 }
 .para-ar.pending{color:var(--text-m);font-size:13px;font-family:inherit;font-style:italic}
-.para-ar.doing{color:var(--gold);font-size:13px;font-family:inherit}
-.para-ar.err{color:var(--red);font-size:12px;font-family:inherit;direction:ltr;text-align:left}
+.para-ar.doing{color:var(--gold);font-size:13px;font-family:inherit;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+body.fz-s .para-en,.fz-s .para-ar{font-size:13px!important}
+body.fz-l .para-en{font-size:17px!important}body.fz-l .para-ar{font-size:18px!important}
+body.fz-xl .para-en{font-size:20px!important}body.fz-xl .para-ar{font-size:21px!important}
 
 /* BOTTOM BAR */
-#bbar{
-  position:fixed;bottom:0;left:0;right:0;
-  background:var(--s1);
-  border-top:0.5px solid var(--border);
-  padding:10px 14px calc(10px + var(--safe-bot));
-  display:none;flex-direction:column;gap:8px;
-  z-index:10;
-}
+#bbar{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:0.5px solid var(--border);padding:8px 10px calc(8px + var(--safe-bot));display:none;flex-direction:column;gap:7px;z-index:20;}
 #bbar.on{display:flex}
-
-#bbar-btns{display:flex;gap:8px}
-#tr-page-btn{
-  flex:1;padding:10px;
-  background:var(--s2);border:0.5px solid var(--border);
-  border-radius:9px;color:var(--text);font-size:13px;
-  cursor:pointer;font-family:inherit;
-}
-#tr-all-btn{
-  flex:1;padding:10px;
-  background:var(--gold);border:none;
-  border-radius:9px;color:#0f0e11;font-size:13px;font-weight:700;
-  cursor:pointer;font-family:inherit;
-}
-#tr-all-btn:disabled{background:var(--s2);color:var(--text-m);cursor:default}
-#tr-page-btn:disabled{opacity:.4;cursor:default}
-#stop-btn{
-  padding:10px 14px;
-  background:transparent;border:0.5px solid var(--red);
-  border-radius:9px;color:var(--red);font-size:13px;
-  cursor:pointer;font-family:inherit;display:none;
-}
+#bbar-row{display:flex;gap:7px;}
+.xb{flex:1;padding:9px 4px;background:var(--s2);border:0.5px solid var(--border);border-radius:9px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;text-align:center;transition:background .15s;}
+.xb:active{background:var(--s3)}.xb:disabled{opacity:.35;cursor:default}
+.xb.gold{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+.xb.gold:disabled{background:var(--s2);border-color:var(--border);color:var(--text-m)}
+#stop-btn{display:none;flex:0 0 auto;padding:9px 12px;color:var(--red);border-color:var(--red)}
 #stop-btn.on{display:block}
-
-#prog-row{display:none;align-items:center;gap:10px}
+#auto-btn.active{background:var(--gold-d2);border-color:var(--gold);color:var(--gold-l)}
+#prog-row{display:none;align-items:center;gap:8px}
 #prog-row.on{display:flex}
 #prog-wrap{flex:1;height:3px;background:var(--s2);border-radius:2px;overflow:hidden}
 #prog-fill{height:100%;background:var(--gold);width:0%;transition:width .3s}
-#prog-lbl{font-size:11px;color:var(--text-m);white-space:nowrap;min-width:80px;text-align:left}
+#prog-lbl{font-size:11px;color:var(--text-m);white-space:nowrap;min-width:100px;direction:rtl;text-align:right}
 
-/* FONT SIZE LEVELS */
-body.fz-s .para-en,.fz-s .para-ar{font-size:13px}
-body.fz-l .para-en{font-size:17px}
-body.fz-l .para-ar{font-size:18px}
-body.fz-xl .para-en{font-size:20px}
-body.fz-xl .para-ar{font-size:21px}
+/* PANELS */
+.panel{position:fixed;inset:0;background:var(--bg);z-index:40;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s ease;}
+.panel.open{transform:translateY(0)}
+.pbar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--safe-top)) 14px 10px;background:var(--s1);border-bottom:0.5px solid var(--border);flex-shrink:0;}
+.ptitle{font-size:15px;font-weight:700;color:var(--gold-l);flex:1}
+.pclose{width:30px;height:30px;background:var(--s2);border:0.5px solid var(--border);border-radius:7px;color:var(--text-m);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;}
 
-.para-heading{
-  font-size:17px!important;font-weight:700;
-  color:var(--gold-l)!important;
-  border-bottom:0.5px solid var(--gold-d2)!important;
-  padding-bottom:10px!important;
-}
-.heading-block{margin-top:14px!important}
+/* TOC */
+.toc-item{padding:12px 14px;background:var(--s1);border:0.5px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:background .15s;}
+.toc-item:active{background:var(--s2)}
+.toc-title{font-size:14px;color:var(--text);line-height:1.4;flex:1;direction:ltr;text-align:left}
+.toc-pg{font-size:12px;color:var(--gold);flex-shrink:0;background:var(--gold-d);padding:2px 8px;border-radius:10px}
+.pmsg{text-align:center;padding:40px 20px;color:var(--text-m);font-size:14px;line-height:1.7}
 
-/* SCROLL */
-#reader::-webkit-scrollbar{width:3px}
-#reader::-webkit-scrollbar-track{background:var(--bg)}
-#reader::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* SEARCH */
+#src-wrap{display:flex;gap:8px;margin-bottom:10px;}
+#src-in{flex:1;padding:10px 14px;background:var(--s1);border:0.5px solid var(--border2);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;direction:ltr;}
+#src-in:focus{outline:none;border-color:var(--gold)}
+#src-go{padding:10px 16px;background:var(--gold);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.sr{padding:12px 14px;background:var(--s1);border:0.5px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;}
+.sr:active{background:var(--s2)}
+.sr-pg{font-size:11px;color:var(--gold);margin-bottom:4px}
+.sr-txt{font-size:13px;color:var(--text-m);line-height:1.5;direction:ltr;text-align:left}
+.sr-txt mark{background:rgba(201,168,76,0.38);border-radius:2px;color:var(--text)}
+#src-status{font-size:13px;color:var(--text-m);padding:10px 0 14px;text-align:center}
+
+/* GOTO */
+#goto-panel .pbody{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:50px 30px}
+#goto-in{width:130px;padding:14px;text-align:center;background:var(--s1);border:0.5px solid var(--border2);border-radius:12px;color:var(--text);font-size:28px;font-weight:700;font-family:inherit;direction:ltr;}
+#goto-in:focus{outline:none;border-color:var(--gold)}
+#goto-hint{font-size:13px;color:var(--text-m)}
+#goto-go{padding:12px 40px;background:var(--gold);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* SELECTION POPUP */
+#sel-pop{position:fixed;z-index:50;background:var(--s1);border:0.5px solid var(--gold);border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45);display:none;flex-direction:column;max-width:310px;}
+#sel-pop.show{display:flex}
+#sel-pop-btn{padding:10px 16px;background:var(--gold-d2);color:var(--gold-l);font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;border-bottom:0.5px solid var(--border);}
+#sel-pop-btn:active{background:var(--gold-d)}
+#sel-pop-res{padding:12px 16px;font-size:15px;line-height:1.9;color:var(--text-ar);font-family:'Amiri',serif;direction:rtl;text-align:right;display:none;min-height:40px;}
+
+/* scrollbars */
+#reader::-webkit-scrollbar,.pbody::-webkit-scrollbar{width:3px}
+#reader::-webkit-scrollbar-thumb,.pbody::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
-<body>
+<body class="dark">
 
+<!-- TOP BAR -->
 <div id="bar">
-  <span id="logo">📖 مترجم الكتب</span>
-  <button id="open-btn" onclick="document.getElementById('file-in').click()">+ فتح PDF</button>
+  <span id="logo">📖 مترجم</span>
+  <button id="open-btn" class="bb" onclick="document.getElementById('file-in').click()">+ فتح PDF</button>
   <input type="file" id="file-in" accept=".pdf">
-
-  <div id="nav">
-    <button class="nav-btn" id="prev-btn" disabled>‹</button>
+  <div id="nav-wrap">
+    <button class="bb" id="prev-btn" disabled style="font-size:19px">‹</button>
     <span id="pinfo">—</span>
-    <button class="nav-btn" id="next-btn" disabled>›</button>
+    <button class="bb" id="next-btn" disabled style="font-size:19px">›</button>
   </div>
-
-  <div id="font-ctrl">
-    <button class="fz-btn" onclick="changeFont(-1)">A-</button>
-    <button class="fz-btn" onclick="changeFont(1)">A+</button>
+  <div id="bar-tools">
+    <button class="bb" id="srch-btn">🔍</button>
+    <button class="bb" id="toc-btn">☰</button>
+    <button class="bb" id="theme-btn">🌙</button>
+    <button class="bb" id="fz-up">A+</button>
+    <button class="bb" id="fz-dn" style="font-size:12px">A-</button>
   </div>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="land">
     <div class="land-icon">📚</div>
-    <h1 class="land-title">ترجمة كتب PDF<br>إنجليزي ← عربي</h1>
-    <p class="land-desc">كل فقرة إنجليزية تحتها ترجمتها العربية مباشرة. يعمل بدون انترنت بعد التحميل الأول.</p>
+    <h1 class="land-title">مترجم الكتب<br><span style="font-size:15px;color:var(--text-m);font-weight:400">إنجليزي ← عربي</span></h1>
+    <p class="land-sub">كل فقرة إنجليزية تحتها ترجمتها مباشرة<br>فهرس · بحث · وضع ليلي/نهاري · سحب للتنقل</p>
     <button id="land-btn" onclick="document.getElementById('file-in').click()">افتح ملف PDF</button>
     <p class="land-hint">يدعم الملفات حتى 600 صفحة</p>
-    <div id="install-hint">
-      <strong>تثبيت التطبيق على الـ iPad:</strong><br>
-      اضغط زر المشاركة ↑ في Safari<br>
-      ثم اختر <strong>"Add to Home Screen"</strong><br>
-      وسيعمل بعدها بدون انترنت تماماً ✓
-    </div>
+    <div id="install-hint"><strong>تثبيت على iPad:</strong><br>Safari ← زر المشاركة ↑ ← <strong>"Add to Home Screen"</strong><br>يعمل بعدها بدون انترنت ✓</div>
   </div>
-
   <div id="reader"></div>
 </div>
 
+<!-- BOTTOM BAR -->
 <div id="bbar">
-  <div id="bbar-btns">
-    <button id="tr-page-btn" onclick="translatePage()">ترجم هذه الصفحة</button>
-    <button id="tr-all-btn" onclick="translateAll()">ترجم الكل</button>
-    <button id="stop-btn" onclick="doStop()">إيقاف</button>
+  <div id="bbar-row">
+    <button class="xb" id="tr-pg-btn" onclick="translatePage()">ترجم الصفحة</button>
+    <button class="xb gold" id="tr-all-btn" onclick="translateAll()">ترجم الكل</button>
+    <button class="xb active" id="auto-btn" onclick="toggleAuto()">🔄 تلقائي</button>
+    <button class="xb" id="stop-btn" onclick="doStop()">⏹</button>
   </div>
   <div id="prog-row">
     <div id="prog-wrap"><div id="prog-fill"></div></div>
@@ -280,45 +217,230 @@ body.fz-xl .para-ar{font-size:21px}
   </div>
 </div>
 
+<!-- TOC PANEL -->
+<div class="panel" id="toc-panel">
+  <div class="pbar">
+    <span class="ptitle">📋 جدول المحتويات</span>
+    <button class="pclose" onclick="closePanel('toc-panel')">✕</button>
+  </div>
+  <div class="pbody" id="toc-body"><div class="pmsg">جاري تحميل الفهرس...</div></div>
+</div>
+
+<!-- SEARCH PANEL -->
+<div class="panel" id="search-panel">
+  <div class="pbar">
+    <span class="ptitle">🔍 بحث في النص</span>
+    <button class="pclose" onclick="closePanel('search-panel')">✕</button>
+  </div>
+  <div class="pbody">
+    <div id="src-wrap">
+      <input type="text" id="src-in" placeholder="اكتب للبحث..." autocomplete="off" autocorrect="off" autocapitalize="off">
+      <button id="src-go" onclick="doSearch()">بحث</button>
+    </div>
+    <div id="src-status"></div>
+    <div id="src-results"></div>
+  </div>
+</div>
+
+<!-- GOTO PANEL -->
+<div class="panel" id="goto-panel">
+  <div class="pbar">
+    <span class="ptitle">انتقل لصفحة</span>
+    <button class="pclose" onclick="closePanel('goto-panel')">✕</button>
+  </div>
+  <div class="pbody">
+    <span id="goto-hint">من 1 إلى <span id="goto-max">—</span></span>
+    <input type="number" id="goto-in" min="1" placeholder="رقم الصفحة">
+    <button id="goto-go" onclick="doGoto()">انتقل</button>
+  </div>
+</div>
+
+<!-- SELECTION POPUP -->
+<div id="sel-pop">
+  <button id="sel-pop-btn" onclick="translateSel()">ترجم المحدد</button>
+  <div id="sel-pop-res"></div>
+</div>
+
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-let pdf=null, totalPages=0, curPage=1;
-let pages={}; // pageNum -> [paragraphs]
-let trans={}; // "p_i" -> translated string
-let busy=false, stop=false;
-let fzLevel=0; // -1,0,1,2
+let pdf=null,totalPages=0,curPage=1;
+let pages={},trans={};
+let busy=false,stop=false;
+let fzLevel=1,isDark=true,autoTr=true;
+let swipeX=0,swipeY=0;
 
-// ── FONT SIZE ──
-function changeFont(d){
-  fzLevel=Math.max(-1,Math.min(2,fzLevel+d));
+// INSTALL HINT
+if(!window.navigator.standalone) document.getElementById('install-hint').style.display='block';
+
+// THEME
+document.getElementById('theme-btn').onclick=()=>{
+  isDark=!isDark;
+  document.body.classList.toggle('dark',isDark);
+  document.body.classList.toggle('light',!isDark);
+  document.getElementById('theme-btn').textContent=isDark?'🌙':'☀️';
+};
+
+// FONT SIZE
+const fzMap=['fz-s','','fz-l','fz-xl'];
+document.getElementById('fz-up').onclick=()=>{fzLevel=Math.min(3,fzLevel+1);applyFz();};
+document.getElementById('fz-dn').onclick=()=>{fzLevel=Math.max(0,fzLevel-1);applyFz();};
+function applyFz(){
   document.body.classList.remove('fz-s','fz-l','fz-xl');
-  if(fzLevel===-1) document.body.classList.add('fz-s');
-  if(fzLevel===1)  document.body.classList.add('fz-l');
-  if(fzLevel===2)  document.body.classList.add('fz-xl');
+  if(fzMap[fzLevel]) document.body.classList.add(fzMap[fzLevel]);
 }
 
-// ── INSTALL HINT (show only in Safari browser, not standalone) ──
-if(!window.navigator.standalone){
-  document.getElementById('install-hint').style.display='block';
+// AUTO TRANSLATE
+function toggleAuto(){
+  autoTr=!autoTr;
+  const b=document.getElementById('auto-btn');
+  b.classList.toggle('active',autoTr);
+  b.textContent=autoTr?'🔄 تلقائي':'⏸ يدوي';
 }
 
-// ── FILE LOAD ──
+// FILE LOAD
 document.getElementById('file-in').addEventListener('change',async e=>{
-  const file=e.target.files[0]; if(!file) return;
+  const file=e.target.files[0];if(!file) return;
   const ab=await file.arrayBuffer();
   pdf=await pdfjsLib.getDocument({data:ab}).promise;
   totalPages=pdf.numPages;
-  pages={}; trans={}; curPage=1;
+  pages={};trans={};curPage=1;
   document.getElementById('land').style.display='none';
   document.getElementById('reader').classList.add('on');
   document.getElementById('bbar').classList.add('on');
-  document.getElementById('nav').style.display='flex';
-  document.getElementById('font-ctrl').style.display='flex';
-  await showPage(curPage);
+  document.getElementById('nav-wrap').style.display='flex';
+  document.getElementById('bar-tools').style.display='flex';
+  document.getElementById('goto-max').textContent=totalPages;
+  buildTOC();
+  await showPage(1);
 });
 
-// ── PAGE EXTRACT ──
+// TOC
+async function buildTOC(){
+  const body=document.getElementById('toc-body');
+  try{
+    const outline=await pdf.getOutline();
+    if(outline&&outline.length){
+      body.innerHTML='';
+      await renderOutline(outline,body,0);
+    } else {
+      body.innerHTML='<div class="pmsg">جاري بناء الفهرس من العناوين...</div>';
+      await buildTOCFromHeadings(body);
+    }
+  }catch(e){body.innerHTML='<div class="pmsg">لا يوجد فهرس في هذا الملف</div>';}
+}
+async function renderOutline(items,container,depth){
+  for(const item of items){
+    const d=document.createElement('div');d.className='toc-item';
+    d.style.paddingRight=(14+depth*14)+'px';
+    const t=document.createElement('span');t.className='toc-title';t.textContent=item.title||'—';
+    const b=document.createElement('span');b.className='toc-pg';b.textContent='...';
+    d.appendChild(t);d.appendChild(b);container.appendChild(d);
+    if(item.dest){
+      try{
+        const dest=typeof item.dest==='string'?await pdf.getDestination(item.dest):item.dest;
+        if(dest){const pg=await pdf.getPageIndex(dest[0]);b.textContent='ص '+(pg+1);d.onclick=()=>{closePanel('toc-panel');goToPage(pg+1);};}
+      }catch(e){b.textContent='—';}
+    }
+    if(item.items&&item.items.length) await renderOutline(item.items,container,depth+1);
+  }
+}
+async function buildTOCFromHeadings(container){
+  container.innerHTML='';
+  let found=0;
+  for(let pg=1;pg<=Math.min(totalPages,60);pg++){
+    const paras=await extractPage(pg);
+    paras.filter(p=>p.isHeading).forEach(p=>{
+      const d=document.createElement('div');d.className='toc-item';
+      const t=document.createElement('span');t.className='toc-title';t.textContent=p.text.substring(0,80);
+      const b=document.createElement('span');b.className='toc-pg';b.textContent='ص '+pg;
+      d.appendChild(t);d.appendChild(b);
+      const pgN=pg;d.onclick=()=>{closePanel('toc-panel');goToPage(pgN);};
+      container.appendChild(d);found++;
+    });
+  }
+  if(!found) container.innerHTML='<div class="pmsg">لم يتم العثور على عناوين في أول 60 صفحة</div>';
+}
+document.getElementById('toc-btn').onclick=()=>openPanel('toc-panel');
+
+// PANELS
+function openPanel(id){document.getElementById(id).classList.add('open');}
+function closePanel(id){document.getElementById(id).classList.remove('open');}
+document.getElementById('srch-btn').onclick=()=>{openPanel('search-panel');setTimeout(()=>document.getElementById('src-in').focus(),300);};
+document.getElementById('src-in').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+
+// SEARCH
+async function doSearch(){
+  const q=document.getElementById('src-in').value.trim();
+  if(!q||!pdf) return;
+  const status=document.getElementById('src-status');
+  const results=document.getElementById('src-results');
+  status.textContent='جاري البحث...';results.innerHTML='';
+  const matches=[];
+  for(let pg=1;pg<=Math.min(totalPages,300);pg++){
+    const paras=await extractPage(pg);
+    paras.forEach((p,i)=>{
+      const text=p.text||p;
+      const lo=text.toLowerCase();const qi=q.toLowerCase();
+      let idx=lo.indexOf(qi);
+      while(idx>=0){matches.push({pg,i,text,idx});idx=lo.indexOf(qi,idx+1);if(matches.length>200)return;}
+    });
+    if(matches.length>200) break;
+  }
+  if(!matches.length){status.textContent='لا توجد نتائج';return;}
+  status.textContent=matches.length+(matches.length>200?'+':'')+' نتيجة';
+  matches.slice(0,60).forEach(m=>{
+    const d=document.createElement('div');d.className='sr';
+    const pg=document.createElement('div');pg.className='sr-pg';pg.textContent='صفحة '+m.pg;
+    const tx=document.createElement('div');tx.className='sr-txt';
+    const b=m.text.substring(Math.max(0,m.idx-35),m.idx);
+    const match=m.text.substring(m.idx,m.idx+q.length);
+    const a=m.text.substring(m.idx+q.length,m.idx+q.length+70);
+    tx.innerHTML=(b?'…':'')+b+'<mark>'+match+'</mark>'+a+'…';
+    d.appendChild(pg);d.appendChild(tx);
+    d.onclick=()=>{
+      closePanel('search-panel');
+      goToPage(m.pg,()=>setTimeout(()=>{const el=document.getElementById(`blk_${m.pg}_${m.i}`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},350));
+    };
+    results.appendChild(d);
+  });
+}
+
+// GOTO
+document.getElementById('pinfo').onclick=()=>openPanel('goto-panel');
+document.getElementById('goto-in').addEventListener('keydown',e=>{if(e.key==='Enter')doGoto();});
+function doGoto(){
+  const v=parseInt(document.getElementById('goto-in').value);
+  if(v>=1&&v<=totalPages){closePanel('goto-panel');goToPage(v);}
+}
+
+// NAV
+document.getElementById('prev-btn').onclick=()=>curPage>1&&goToPage(curPage-1);
+document.getElementById('next-btn').onclick=()=>curPage<totalPages&&goToPage(curPage+1);
+
+async function goToPage(n,cb){
+  if(!n||n<1||n>totalPages) return;
+  curPage=n;await showPage(n);if(cb)cb();
+}
+function updateNav(){
+  document.getElementById('pinfo').textContent=curPage+' / '+totalPages;
+  document.getElementById('prev-btn').disabled=curPage<=1;
+  document.getElementById('next-btn').disabled=curPage>=totalPages;
+}
+
+// SWIPE
+const readerEl=document.getElementById('reader');
+readerEl.addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX;swipeY=e.touches[0].clientY;},{passive:true});
+readerEl.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-swipeX;
+  const dy=e.changedTouches[0].clientY-swipeY;
+  if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5){
+    if(dx<0&&curPage<totalPages) goToPage(curPage+1);
+    if(dx>0&&curPage>1) goToPage(curPage-1);
+  }
+},{passive:true});
+
+// EXTRACT PAGE
 async function extractPage(n){
   if(pages[n]) return pages[n];
   const page=await pdf.getPage(n);
@@ -329,273 +451,196 @@ async function extractPage(n){
 
 function parseParagraphs(tc){
   if(!tc.items.length) return [];
-
-  // ── Step 1: collect all text items with position & font size
-  const items = tc.items
-    .filter(it => it.str && it.str.trim())
-    .map(it => ({
-      text: it.str,
-      x: it.transform[4],
-      y: it.transform[5],
-      h: it.height || Math.abs(it.transform[3]) || 12,
-      w: it.width || 0
-    }));
-
+  const items=tc.items.filter(it=>it.str&&it.str.trim()).map(it=>({
+    text:it.str,x:it.transform[4],y:it.transform[5],
+    h:it.height||Math.abs(it.transform[3])||12
+  }));
   if(!items.length) return [];
-
-  // ── Step 2: detect dominant (body) font size
-  const hCounts = {};
+  const hc={};
+  items.forEach(it=>{const k=Math.round(it.h);hc[k]=(hc[k]||0)+1;});
+  const bodyH=parseInt(Object.entries(hc).sort((a,b)=>b[1]-a[1])[0][0]);
+  const snap=Math.max(3,Math.round(bodyH*0.5));
+  const lm={};
   items.forEach(it=>{
-    const hk = Math.round(it.h);
-    hCounts[hk] = (hCounts[hk]||0)+1;
+    const yk=Math.round(it.y/snap)*snap;
+    if(!lm[yk]) lm[yk]={y:it.y,items:[],h:it.h};
+    lm[yk].items.push(it);lm[yk].h=Math.max(lm[yk].h,it.h);
   });
-  const bodyH = parseInt(Object.entries(hCounts).sort((a,b)=>b[1]-a[1])[0][0]);
-
-  // ── Step 3: snap Y to line grid (tolerance = half body height)
-  const snap = Math.max(3, Math.round(bodyH * 0.5));
-  const lineMap = {};
-  items.forEach(it=>{
-    const yk = Math.round(it.y / snap) * snap;
-    if(!lineMap[yk]) lineMap[yk] = {y:it.y, items:[], h:it.h};
-    lineMap[yk].items.push(it);
-    lineMap[yk].h = Math.max(lineMap[yk].h, it.h);
-  });
-
-  // ── Step 4: sort lines top-to-bottom, assemble line text by X order
-  const lines = Object.values(lineMap)
-    .sort((a,b) => b.y - a.y)
-    .map(l => ({
-      y: l.y,
-      h: l.h,
-      text: l.items.sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ').replace(/\s+/g,' ').trim()
-    }))
-    .filter(l => l.text.length > 0);
-
+  const lines=Object.values(lm).sort((a,b)=>b.y-a.y).map(l=>({
+    y:l.y,h:l.h,text:l.items.sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ').replace(/\s+/g,' ').trim()
+  })).filter(l=>l.text.length>0);
   if(!lines.length) return [];
-
-  // ── Step 5: detect normal line spacing
-  const gaps = [];
-  for(let i=1;i<lines.length;i++){
-    gaps.push(Math.abs(lines[i-1].y - lines[i].y));
-  }
+  const gaps=[];
+  for(let i=1;i<lines.length;i++) gaps.push(Math.abs(lines[i-1].y-lines[i].y));
   gaps.sort((a,b)=>a-b);
-  const medGap = gaps[Math.floor(gaps.length*0.5)] || bodyH * 1.3;
-  // paragraph break = gap significantly larger than normal line spacing
-  const breakThreshold = medGap * 1.6;
-
-  // ── Step 6: merge lines into paragraphs
-  const paras = [];
-  let cur = '';
-  let prevY = null;
-  let prevH = bodyH;
-
-  lines.forEach(l => {
-    const gap = prevY !== null ? Math.abs(prevY - l.y) : 0;
-    const isHeading = l.h > bodyH * 1.25; // larger font = heading
-    const isBreak = gap > breakThreshold;
-    const isShortLine = cur.length > 0 && cur.split(' ').length < 6 && gap > medGap * 1.1;
-
-    if(prevY !== null && (isBreak || isHeading || isShortLine) && cur.trim()){
-      paras.push({text: cur.trim(), isHeading: prevH > bodyH * 1.25});
-      cur = l.text;
+  const medGap=gaps[Math.floor(gaps.length*0.5)]||bodyH*1.3;
+  const breakThr=medGap*1.6;
+  const paras=[];let cur='',prevY=null,prevH=bodyH;
+  lines.forEach(l=>{
+    const gap=prevY!==null?Math.abs(prevY-l.y):0;
+    const isH=l.h>bodyH*1.25;
+    if(prevY!==null&&(gap>breakThr||isH)&&cur.trim()){
+      paras.push({text:cur.trim(),isHeading:prevH>bodyH*1.25});
+      cur=l.text;
     } else {
-      // join with space, handle hyphenation
-      if(cur.endsWith('-')){
-        cur = cur.slice(0,-1) + l.text;
-      } else {
-        cur += (cur ? ' ' : '') + l.text;
-      }
+      if(cur.endsWith('-')) cur=cur.slice(0,-1)+l.text.trimStart();
+      else cur+=(cur?' ':'')+l.text;
     }
-    prevY = l.y;
-    prevH = l.h;
+    prevY=l.y;prevH=l.h;
   });
-  if(cur.trim()) paras.push({text: cur.trim(), isHeading: prevH > bodyH * 1.25});
-
-  // ── Step 7: filter & return
-  return paras
-    .filter(p => p.text.length > 15)
-    .map(p => ({...p, text: p.text.replace(/\s+/g,' ').trim()}));
+  if(cur.trim()) paras.push({text:cur.trim(),isHeading:prevH>bodyH*1.25});
+  return paras.filter(p=>p.text.length>15).map(p=>({...p,text:p.text.replace(/\s+/g,' ').trim()}));
 }
 
-// ── RENDER ──
+// RENDER
 async function showPage(n){
   const paras=await extractPage(n);
   updateNav();
   renderReader(n,paras);
+  if(autoTr&&!busy) translatePage();
 }
 
 function renderReader(n,paras){
   const r=document.getElementById('reader');
   r.innerHTML='';
-
-  // page separator
-  const sep=document.createElement('div');
-  sep.className='page-sep';
+  const sep=document.createElement('div');sep.className='page-sep';
   sep.innerHTML=`<span>— صفحة ${n} من ${totalPages} —</span>`;
   r.appendChild(sep);
-
   if(!paras.length){
-    const empty=document.createElement('div');
-    empty.style.cssText='padding:40px;text-align:center;color:var(--text-m);font-size:14px;';
-    empty.textContent='لا يوجد نص في هذه الصفحة';
-    r.appendChild(empty);
-    return;
+    const e=document.createElement('div');e.style.cssText='padding:40px;text-align:center;color:var(--text-m);font-size:14px;';
+    e.textContent='لا يوجد نص في هذه الصفحة';r.appendChild(e);return;
   }
-
   paras.forEach((p,i)=>{
     const key=`${n}_${i}`;
-    const text = typeof p === 'string' ? p : p.text;
-    const isHeading = typeof p === 'object' && p.isHeading;
-
     const block=document.createElement('div');
-    block.className='para-block' + (isHeading?' heading-block':'');
+    block.className='para-block'+(p.isHeading?' heading-block':'');
     block.id=`blk_${key}`;
-
-    // English
     const en=document.createElement('div');
-    en.className='para-en' + (isHeading?' para-heading':'');
-    en.textContent=text;
-
-    // Arabic
+    en.className='para-en'+(p.isHeading?' para-heading':'');
+    en.textContent=p.text;
     const ar=document.createElement('div');
-    ar.className='para-ar';
-    ar.id=`ar_${key}`;
-    if(trans[key]){
-      ar.textContent=trans[key];
-    } else {
-      ar.classList.add('pending');
-      ar.textContent='اضغط "ترجم" لعرض الترجمة...';
-    }
-
-    block.appendChild(en);
-    block.appendChild(ar);
-    r.appendChild(block);
+    ar.className='para-ar';ar.id=`ar_${key}`;
+    if(trans[key]) ar.textContent=trans[key];
+    else{ar.classList.add('pending');ar.textContent='في انتظار الترجمة...';}
+    block.appendChild(en);block.appendChild(ar);r.appendChild(block);
   });
   r.scrollTop=0;
 }
 
-function updateNav(){
-  document.getElementById('pinfo').textContent=`${curPage} / ${totalPages}`;
-  document.getElementById('prev-btn').disabled=curPage<=1;
-  document.getElementById('next-btn').disabled=curPage>=totalPages;
+// SELECTION TRANSLATE
+document.addEventListener('selectionchange',()=>{
+  const sel=window.getSelection();
+  const txt=sel?sel.toString().trim():'';
+  const pop=document.getElementById('sel-pop');
+  if(txt.length>4&&txt.length<500){
+    try{
+      const range=sel.getRangeAt(0);
+      const rect=range.getBoundingClientRect();
+      pop.style.top=Math.max(10,rect.top-90)+'px';
+      pop.style.left=Math.max(10,Math.min(window.innerWidth-330,rect.left))+'px';
+      pop.classList.add('show');
+      document.getElementById('sel-pop-res').style.display='none';
+    }catch(e){}
+  } else {
+    pop.classList.remove('show');
+  }
+});
+
+async function translateSel(){
+  const sel=window.getSelection();
+  if(!sel) return;
+  const txt=sel.toString().trim();if(!txt) return;
+  const btn=document.getElementById('sel-pop-btn');
+  const res=document.getElementById('sel-pop-res');
+  btn.textContent='⏳ جاري...';btn.disabled=true;
+  res.style.display='block';res.textContent='جاري الترجمة...';
+  const tr=await translateText(txt);
+  res.textContent=tr||'—';
+  btn.textContent='ترجم المحدد';btn.disabled=false;
 }
 
-document.getElementById('prev-btn').onclick=async()=>{
-  if(curPage>1){curPage--;await showPage(curPage);}
-};
-document.getElementById('next-btn').onclick=async()=>{
-  if(curPage<totalPages){curPage++;await showPage(curPage);}
-};
+// TRANSLATION ENGINE
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-// ── SPLIT TEXT into chunks ≤ maxLen at sentence boundaries ──
-function splitText(text, maxLen){
-  if(text.length <= maxLen) return [text];
-  const chunks = [];
-  let rem = text.trim();
-  while(rem.length > maxLen){
-    let idx = rem.lastIndexOf('. ', maxLen);
-    if(idx < maxLen * 0.4) idx = rem.lastIndexOf(' ', maxLen);
-    if(idx < 5) idx = maxLen;
-    else idx += 1;
-    chunks.push(rem.substring(0, idx).trim());
-    rem = rem.substring(idx).trim();
+function splitText(text,maxLen){
+  if(text.length<=maxLen) return [text];
+  const chunks=[];let rem=text.trim();
+  while(rem.length>maxLen){
+    let idx=rem.lastIndexOf('. ',maxLen);
+    if(idx<maxLen*0.4) idx=rem.lastIndexOf(' ',maxLen);
+    if(idx<5) idx=maxLen; else idx+=1;
+    chunks.push(rem.substring(0,idx).trim());
+    rem=rem.substring(idx).trim();
   }
   if(rem) chunks.push(rem);
-  return chunks.filter(c => c.length > 0);
+  return chunks.filter(c=>c.length>0);
 }
 
-// ── API 1: MyMemory ──
-async function tryMyMemory(text){
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`;
-  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+async function tryGoogle(text){
+  const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=${encodeURIComponent(text)}`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
   if(!r.ok) return null;
-  const d = await r.json();
-  const status = parseInt(d.responseStatus);
-  if(status === 200){
-    const t = d.responseData?.translatedText;
-    if(t && t.trim() && t !== text && !/MYMEMORY WARNING/.test(t)) return t;
+  const d=await r.json();
+  if(!d||!d[0]) return null;
+  const result=d[0].filter(x=>x&&x[0]).map(x=>x[0]).join('');
+  return result.trim()||null;
+}
+
+async function tryMyMemory(text){
+  const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ar`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
+  if(!r.ok) return null;
+  const d=await r.json();
+  if(parseInt(d.responseStatus)===200){
+    const t=d.responseData?.translatedText;
+    if(t&&t.trim()&&t!==text&&!/MYMEMORY WARNING/.test(t)) return t;
   }
   return null;
 }
 
-// ── API 2: Google Translate (unofficial, no key needed) ──
-async function tryGoogle(text){
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=${encodeURIComponent(text)}`;
-  const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
-  if(!r.ok) return null;
-  const d = await r.json();
-  if(!d || !d[0]) return null;
-  const result = d[0].filter(x=>x&&x[0]).map(x=>x[0]).join('');
-  return result.trim() || null;
-}
-
-// ── TRANSLATE ONE CHUNK with fallback ──
 async function translateChunk(text){
-  // Try Google first (more reliable, no quota)
-  try {
-    const g = await tryGoogle(text);
-    if(g) return g;
-  } catch(e){}
-
-  // Fallback: MyMemory
+  try{const g=await tryGoogle(text);if(g) return g;}catch(e){}
   await sleep(200);
-  try {
-    const m = await tryMyMemory(text);
-    if(m) return m;
-  } catch(e){}
-
-  // Last resort: retry Google after delay
+  try{const m=await tryMyMemory(text);if(m) return m;}catch(e){}
   await sleep(1500);
-  try {
-    const g2 = await tryGoogle(text);
-    if(g2) return g2;
-  } catch(e){}
-
-  return ''; // return empty string instead of error message
+  try{const g2=await tryGoogle(text);if(g2) return g2;}catch(e){}
+  return '';
 }
 
-// ── MAIN TRANSLATE FUNCTION ──
 async function translateText(text){
-  text = text.trim();
-  if(!text) return '';
-
-  const chunks = splitText(text, 400);
-  const results = [];
+  text=text.trim();if(!text) return '';
+  const chunks=splitText(text,400);
+  const results=[];
   for(const chunk of chunks){
     if(stop) break;
-    const result = await translateChunk(chunk);
-    results.push(result);
-    if(chunks.length > 1) await sleep(300);
+    results.push(await translateChunk(chunk));
+    if(chunks.length>1) await sleep(250);
   }
   return results.join(' ').trim();
 }
 
-// ── TRANSLATE PAGE ──
+// TRANSLATE PAGE
 async function translatePage(){
   if(!pdf||busy) return;
-  stop=false; setBusy(true);
+  stop=false;setBusy(true);
   const paras=pages[curPage]||[];
   for(let i=0;i<paras.length;i++){
     if(stop) break;
     const key=`${curPage}_${i}`;
-    if(trans[key]){ setArEl(key,trans[key]); continue; }
+    if(trans[key]){setArEl(key,trans[key]);continue;}
     setArElDoing(key);
     setProgress(i,paras.length,`فقرة ${i+1} من ${paras.length}`);
-    const text = typeof paras[i]==='string' ? paras[i] : paras[i].text;
-    const result=await translateText(text);
-    trans[key]=result;
-    setArEl(key,result);
+    const result=await translateText(paras[i].text||paras[i]);
+    trans[key]=result;setArEl(key,result);
   }
   setProgress(paras.length,paras.length,'اكتملت ✓');
   setBusy(false);
 }
 
-// ── TRANSLATE ALL (page by page) ──
+// TRANSLATE ALL
 async function translateAll(){
   if(!pdf||busy) return;
-  stop=false; setBusy(true);
+  stop=false;setBusy(true);
   for(let pg=curPage;pg<=totalPages;pg++){
     if(stop) break;
     const paras=await extractPage(pg);
@@ -603,11 +648,9 @@ async function translateAll(){
       if(stop) break;
       const key=`${pg}_${i}`;
       if(trans[key]) continue;
-      const lbl=`ص${pg}/${totalPages} — فقرة ${i+1}`;
-      setProgress(0,1,lbl);
+      setProgress(0,1,`ص${pg}/${totalPages} — فقرة ${i+1}`);
       if(pg===curPage) setArElDoing(key);
-      const text = typeof paras[i]==='string' ? paras[i] : paras[i].text;
-      const result=await translateText(text);
+      const result=await translateText(paras[i].text||paras[i]);
       trans[key]=result;
       if(pg===curPage) setArEl(key,result);
     }
@@ -620,42 +663,30 @@ function doStop(){stop=true;setBusy(false);}
 
 function setBusy(v){
   busy=v;
-  document.getElementById('tr-page-btn').disabled=v;
+  document.getElementById('tr-pg-btn').disabled=v;
   document.getElementById('tr-all-btn').disabled=v;
   document.getElementById('stop-btn').classList.toggle('on',v);
   document.getElementById('prog-row').classList.toggle('on',v);
   if(!v) document.getElementById('prog-row').classList.remove('on');
 }
-
 function setProgress(done,total,lbl){
   const pct=total>0?Math.round(done/total*100):0;
   document.getElementById('prog-fill').style.width=pct+'%';
   document.getElementById('prog-lbl').textContent=lbl||pct+'%';
 }
-
 function setArEl(key,text){
-  const el=document.getElementById(`ar_${key}`);
-  if(!el) return;
+  const el=document.getElementById(`ar_${key}`);if(!el) return;
   el.className='para-ar';
-  if(!text || text.trim()===''){
-    el.classList.add('pending');
-    el.textContent='لم تتم الترجمة، حاول مرة أخرى';
-  } else {
-    el.textContent=text;
-  }
+  if(!text||!text.trim()){el.classList.add('pending');el.textContent='لم تتم الترجمة';}
+  else el.textContent=text;
 }
-
 function setArElDoing(key){
-  const el=document.getElementById(`ar_${key}`);
-  if(!el) return;
-  el.className='para-ar doing';
-  el.textContent='⏳ جاري الترجمة...';
+  const el=document.getElementById(`ar_${key}`);if(!el) return;
+  el.className='para-ar doing';el.textContent='جاري الترجمة...';
 }
 
-// ── SERVICE WORKER ──
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
-}
+// SERVICE WORKER
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
 </html>
